@@ -1,21 +1,19 @@
 {
   "targets": [
     {
-      "target_name": "tree_sitter_ocaml_binding",
+      "target_name": "tree_sitter_reason_binding",
       "include_dirs": [
         "<!(node -e \"require('nan')\")",
-        "ocaml/src"
+        "src"
       ],
       "sources": [
-        "ocaml/src/parser.c",
-        "ocaml/src/scanner.cc",
-        "interface/src/parser.c",
-        "interface/src/scanner.cc",
-        "bindings/node/binding.cc"
+        "bindings/node/binding.cc",
+        "src/parser.c",
+        # If your language uses an external scanner, add it here.
       ],
       "cflags_c": [
         "-std=c99",
       ]
-    },
+    }
   ]
 }

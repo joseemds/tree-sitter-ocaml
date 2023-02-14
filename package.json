@@ -1,10 +1,11 @@
 {
-  "name": "tree-sitter-ocaml",
+  "name": "tree-sitter-reason",
   "version": "0.20.1",
-  "description": "OCaml grammar for tree-sitter",
+  "description": "ReasonML grammar for tree-sitter",
   "keywords": [
     "parser",
-    "ocaml"
+    "reason",
+    "reasonml"
   ],
   "author": "Max Brunsfeld",
   "license": "MIT",
@@ -23,23 +24,13 @@
     "test-interface": "cd interface && tree-sitter test",
     "test-highlight": "tree-sitter test"
   },
-  "tree-sitter": [
-    {
-      "scope": "source.ocaml",
-      "file-types": [
-        "ml"
-      ],
-      "first-line-regex": "",
-      "path": "ocaml",
-      "injection-regex": "^(ocaml|ml)$"
-    },
-    {
-      "scope": "source.ocaml.interface",
-      "file-types": [
-        "mli"
-      ],
-      "path": "interface",
-      "injection-regex": "^ocaml_interface$"
-    }
-  ]
+  "main": "bindings/node",
+	"tree-sitter": [
+		{
+			"scope": "source.reason",
+			"file-types": [
+				"re"
+			]
+		}
+	]
 }
