@@ -169,7 +169,8 @@ module.exports = grammar({
         '=',
         field('body', $._sequence_expression_ext),
       )),
-      repeat($.item_attribute)
+      repeat($.item_attribute),
+			optional(';')
     )),
 
     _parameter: $ => choice(
