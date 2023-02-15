@@ -1037,8 +1037,8 @@ module.exports = grammar({
     list_expression: $ => seq(
       '[',
       optional(seq(
-        sep1(';', $._expression_ext),
-        optional(';')
+        sep1(',', $._expression_ext),
+        optional(',')
       )),
       ']'
     ),
@@ -1046,8 +1046,8 @@ module.exports = grammar({
     array_expression: $ => seq(
       '[|',
       optional(seq(
-        sep1(';', $._expression_ext),
-        optional(';')
+        sep1(',', $._expression_ext),
+        optional(',')
       )),
       '|]'
     ),
