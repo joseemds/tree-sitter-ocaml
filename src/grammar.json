@@ -5186,7 +5186,7 @@
                         "members": [
                           {
                             "type": "STRING",
-                            "value": ";"
+                            "value": ","
                           },
                           {
                             "type": "SYMBOL",
@@ -5202,7 +5202,7 @@
                   "members": [
                     {
                       "type": "STRING",
-                      "value": ";"
+                      "value": ","
                     },
                     {
                       "type": "BLANK"
@@ -5249,7 +5249,7 @@
                         "members": [
                           {
                             "type": "STRING",
-                            "value": ";"
+                            "value": ","
                           },
                           {
                             "type": "SYMBOL",
@@ -5265,7 +5265,7 @@
                   "members": [
                     {
                       "type": "STRING",
-                      "value": ";"
+                      "value": ","
                     },
                     {
                       "type": "BLANK"

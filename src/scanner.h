@@ -1,5 +1,5 @@
-#include <tree_sitter/parser.h>
 #include <string>
+#include <tree_sitter/parser.h>
 #include <wctype.h>
 
 namespace {
@@ -32,23 +32,23 @@ struct Scanner {
     }
   }
 
-  void advance(TSLexer *lexer) {
-    lexer->advance(lexer, false);
-  }
+  void advance(TSLexer *lexer) { lexer->advance(lexer, false); }
 
-  void skip(TSLexer *lexer) {
-    lexer->advance(lexer, true);
-  }
+  void skip(TSLexer *lexer) { lexer->advance(lexer, true); }
 
   bool scan(TSLexer *lexer, const bool *valid_symbols) {
-    if (valid_symbols[LEFT_QUOTED_STRING_DELIM] && (iswlower(lexer->lookahead) || lexer->lookahead == '_' || lexer->lookahead == '|')) {
+    if (valid_symbols[LEFT_QUOTED_STRING_DELIM] &&
+        (iswlower(lexer->lookahead) || lexer->lookahead == '_' ||
+         lexer->lookahead == '|')) {
       lexer->result_symbol = LEFT_QUOTED_STRING_DELIM;
       return scan_left_quoted_string_delimiter(lexer);
-    } else if (valid_symbols[RIGHT_QUOTED_STRING_DELIM] && (lexer->lookahead == '|')) {
+    } else if (valid_symbols[RIGHT_QUOTED_STRING_DELIM] &&
+               (lexer->lookahead == '|')) {
       advance(lexer);
       lexer->result_symbol = RIGHT_QUOTED_STRING_DELIM;
       return scan_right_quoted_string_delimiter(lexer);
-    } else if (in_string && valid_symbols[STRING_DELIM] && lexer->lookahead == '"') {
+    } else if (in_string && valid_symbols[STRING_DELIM] &&
+               lexer->lookahead == '"') {
       advance(lexer);
       in_string = false;
       lexer->result_symbol = STRING_DELIM;
@@ -59,29 +59,40 @@ struct Scanner {
       skip(lexer);
     }
 
-    if (!in_string && lexer->lookahead == '#' && lexer->get_column(lexer) == 0) {
+    if (!in_string && lexer->lookahead == '#' &&
+        lexer->get_column(lexer) == 0) {
       advance(lexer);
 
-      while (lexer->lookahead == ' ' || lexer->lookahead == '\t') advance(lexer);
+      while (lexer->lookahead == ' ' || lexer->lookahead == '\t')
+        advance(lexer);
 
-      if (!iswdigit(lexer->lookahead)) return false;
-      while (iswdigit(lexer->lookahead)) advance(lexer);
+      if (!iswdigit(lexer->lookahead))
+        return false;
+      while (iswdigit(lexer->lookahead))
+        advance(lexer);
 
-      while (lexer->lookahead == ' ' || lexer->lookahead == '\t') advance(lexer);
+      while (lexer->lookahead == ' ' || lexer->lookahead == '\t')
+        advance(lexer);
 
-      if (lexer->lookahead != '"') return false;
-      while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != '"') advance(lexer);
-      if (lexer->lookahead != '"') return false;
+      if (lexer->lookahead != '"')
+        return false;
+      while (lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
+             lexer->lookahead != '"')
+        advance(lexer);
+      if (lexer->lookahead != '"')
+        return false;
 
-      while (lexer->lookahead != '\n' && lexer->lookahead != '\r') advance(lexer);
+      while (lexer->lookahead != '\n' && lexer->lookahead != '\r')
+        advance(lexer);
 
       lexer->result_symbol = LINE_NUMBER_DIRECTIVE;
       return true;
-    } else if (!in_string && lexer->lookahead == '(') {
+    } else if (!in_string && lexer->lookahead == '/') {
       advance(lexer);
       lexer->result_symbol = COMMENT;
       return scan_comment(lexer);
-    } else if (!in_string && valid_symbols[STRING_DELIM] && lexer->lookahead == '"') {
+    } else if (!in_string && valid_symbols[STRING_DELIM] &&
+               lexer->lookahead == '"') {
       advance(lexer);
       in_string = true;
       lexer->result_symbol = STRING_DELIM;
@@ -96,19 +107,20 @@ struct Scanner {
   void scan_string(TSLexer *lexer) {
     for (;;) {
       switch (lexer->lookahead) {
-        case '\\':
-          advance(lexer);
-          advance(lexer);
-          break;
-        case '"':
-          advance(lexer);
+      case '\\':
+        advance(lexer);
+        advance(lexer);
+        break;
+      case '"':
+        advance(lexer);
+        return;
+      case '\0':
+        if (lexer->eof(lexer))
           return;
-        case '\0':
-          if (lexer->eof(lexer)) return;
-          advance(lexer);
-          break;
-        default:
-          advance(lexer);
+        advance(lexer);
+        break;
+      default:
+        advance(lexer);
       }
     }
   }
@@ -117,55 +129,61 @@ struct Scanner {
     char last = 0;
 
     switch (lexer->lookahead) {
-      case '\\':
+    case '\\':
+      advance(lexer);
+      if (iswdigit(lexer->lookahead)) {
         advance(lexer);
-        if (iswdigit(lexer->lookahead)) {
+        for (size_t i = 0; i < 2; i++) {
+          if (!iswdigit(lexer->lookahead))
+            return 0;
+          advance(lexer);
+        }
+      } else {
+        switch (lexer->lookahead) {
+        case 'x':
           advance(lexer);
           for (size_t i = 0; i < 2; i++) {
-            if (!iswdigit(lexer->lookahead)) return 0;
+            if (!iswdigit(lexer->lookahead) &&
+                (towupper(lexer->lookahead) < 'A' ||
+                 towupper(lexer->lookahead) > 'F'))
+              return 0;
             advance(lexer);
           }
-        } else {
-          switch (lexer->lookahead) {
-            case 'x':
-              advance(lexer);
-              for (size_t i = 0; i < 2; i++) {
-                if (!iswdigit(lexer->lookahead) && (towupper(lexer->lookahead) < 'A' || towupper(lexer->lookahead) > 'F')) return 0;
-                advance(lexer);
-              }
-              break;
-            case 'o':
-              advance(lexer);
-              for (size_t i = 0; i < 3; i++) {
-                if (!iswdigit(lexer->lookahead) || lexer->lookahead > '7') return 0;
-                advance(lexer);
-              }
-              break;
-            case '\'':
-            case '"':
-            case '\\':
-            case 'n':
-            case 't':
-            case 'b':
-            case 'r':
-            case ' ':
-              last = lexer->lookahead;
-              advance(lexer);
-              break;
-            default:
+          break;
+        case 'o':
+          advance(lexer);
+          for (size_t i = 0; i < 3; i++) {
+            if (!iswdigit(lexer->lookahead) || lexer->lookahead > '7')
               return 0;
+            advance(lexer);
           }
+          break;
+        case '\'':
+        case '"':
+        case '\\':
+        case 'n':
+        case 't':
+        case 'b':
+        case 'r':
+        case ' ':
+          last = lexer->lookahead;
+          advance(lexer);
+          break;
+        default:
+          return 0;
         }
-        break;
-      case '\'':
-        break;
-      case '\0':
-        if (lexer->eof(lexer)) return 0;
-        advance(lexer);
-        break;
-      default:
-        last = lexer->lookahead;
-        advance(lexer);
+      }
+      break;
+    case '\'':
+      break;
+    case '\0':
+      if (lexer->eof(lexer))
+        return 0;
+      advance(lexer);
+      break;
+    default:
+      last = lexer->lookahead;
+      advance(lexer);
     }
 
     if (lexer->lookahead == '\'') {
@@ -184,7 +202,8 @@ struct Scanner {
       advance(lexer);
     }
 
-    if (lexer->lookahead != '|') return false;
+    if (lexer->lookahead != '|')
+      return false;
 
     advance(lexer);
     in_string = true;
@@ -193,31 +212,36 @@ struct Scanner {
 
   bool scan_right_quoted_string_delimiter(TSLexer *lexer) {
     for (size_t i = 0; i < quoted_string_id.size(); i++) {
-      if (lexer->lookahead != quoted_string_id[i]) return false;
+      if (lexer->lookahead != quoted_string_id[i])
+        return false;
       advance(lexer);
     }
 
-    if (lexer->lookahead != '}') return false;
+    if (lexer->lookahead != '}')
+      return false;
 
     in_string = false;
     return true;
   }
 
   bool scan_quoted_string(TSLexer *lexer) {
-    if (!scan_left_quoted_string_delimiter(lexer)) return false;
+    if (!scan_left_quoted_string_delimiter(lexer))
+      return false;
 
     for (;;) {
       switch (lexer->lookahead) {
-        case '|':
-          advance(lexer);
-          if (scan_right_quoted_string_delimiter(lexer)) return true;
-          break;
-        case '\0':
-          if (lexer->eof(lexer)) return false;
-          advance(lexer);
-          break;
-        default:
-          advance(lexer);
+      case '|':
+        advance(lexer);
+        if (scan_right_quoted_string_delimiter(lexer))
+          return true;
+        break;
+      case '\0':
+        if (lexer->eof(lexer))
+          return false;
+        advance(lexer);
+        break;
+      default:
+        advance(lexer);
       }
     }
   }
@@ -225,7 +249,8 @@ struct Scanner {
   bool scan_identifier(TSLexer *lexer) {
     if (iswalpha(lexer->lookahead) || lexer->lookahead == '_') {
       advance(lexer);
-      while (iswalnum(lexer->lookahead) || lexer->lookahead == '_' || lexer->lookahead == '\'') {
+      while (iswalnum(lexer->lookahead) || lexer->lookahead == '_' ||
+             lexer->lookahead == '\'') {
         advance(lexer);
       }
       return true;
@@ -235,60 +260,38 @@ struct Scanner {
 
   bool scan_extattrident(TSLexer *lexer) {
     while (scan_identifier(lexer)) {
-      if (lexer->lookahead != '.') return true;
+      if (lexer->lookahead != '.')
+        return true;
     }
     return false;
   }
 
   bool scan_comment(TSLexer *lexer) {
-    char last = 0;
-
-    if (lexer->lookahead != '*') return false;
-    advance(lexer);
-
     for (;;) {
-      switch (last ? last : lexer->lookahead) {
-        case '(':
-          if (last) last = 0; else advance(lexer);
-          scan_comment(lexer);
-          break;
-        case '*':
-          if (last) last = 0; else advance(lexer);
-          if (lexer->lookahead == ')') {
-            advance(lexer);
-            return true;
-          }
-          break;
-        case '\'':
-          if (last) last = 0; else advance(lexer);
-          last = scan_character(lexer);
-          break;
-        case '"':
-          if (last) last = 0; else advance(lexer);
-          scan_string(lexer);
-          break;
-        case '{':
-          if (last) last = 0; else advance(lexer);
-          if (lexer->lookahead == '%') {
-            advance(lexer);
-            if (lexer->lookahead == '%') advance(lexer);
-            if (scan_extattrident(lexer)) {
-              while (iswspace(lexer->lookahead)) advance(lexer);
-            } else {
-              break;
-            }
-          }
-          if (scan_quoted_string(lexer)) advance(lexer);
-          break;
-        case '\0':
-          if (lexer->eof(lexer)) return false;
-          if (last) last = 0; else advance(lexer);
-          break;
-        default:
-          if (scan_identifier(lexer) || last) last = 0; else advance(lexer);
+      switch (lexer->lookahead) {
+      case '/':
+        advance(lexer);
+        while (lexer->lookahead != '\n') {
+          advance(lexer);
+        }
+        return true;
+			case '*':
+				advance(lexer);
+				while (lexer->lookahead != 0) {
+					advance(lexer);
+					if(lexer->lookahead == '*') {
+						advance(lexer);
+						if(lexer->lookahead == '/'){
+							advance(lexer);
+							return true;
+						}
+					}
+				}
+				return false;
+      default:
+        return false;
       }
-    }
-  }
-};
-
-}
+    };
+  };
+}; 
+} // namespace
