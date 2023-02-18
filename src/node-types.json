@@ -5539,6 +5539,10 @@
     "named": false
   },
   {
+    "type": "=>",
+    "named": false
+  },
+  {
     "type": ">",
     "named": false
   },
@@ -5691,11 +5695,11 @@
     "named": false
   },
   {
-    "type": "function",
+    "type": "functor",
     "named": false
   },
   {
-    "type": "functor",
+    "type": "funny",
     "named": false
   },
   {

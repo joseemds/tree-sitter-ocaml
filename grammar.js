@@ -226,10 +226,10 @@ module.exports = grammar({
     ),
 
     type_binding: $ => seq(
-      optional($._type_params),
       choice(
         seq(
           field('name', $._type_constructor),
+					optional($._type_params),
           optional($._type_equation),
           optional(seq(
             '=',
@@ -240,6 +240,7 @@ module.exports = grammar({
         ),
         seq(
           field('name', $.type_constructor_path),
+					optional($._type_params),
           seq(
             '+=',
             optional('private'),
@@ -247,7 +248,8 @@ module.exports = grammar({
           )
         )
       ),
-      repeat($.item_attribute)
+      repeat($.item_attribute),
+			optional(';')
     ),
 
     _type_params: $ => choice(
@@ -837,10 +839,10 @@ module.exports = grammar({
       $.tuple_type
     ),
 
-    _tuple_type_ext: $ => choice(
+    _tuple_type_ext: $ => prec(PREC.hash, choice(
       $._tuple_type,
       $._extension
-    ),
+    )),
 
     _type: $ => choice(
       $._tuple_type,
@@ -868,7 +870,7 @@ module.exports = grammar({
 
     tuple_type: $ => prec(PREC.prod, seq(
       $._tuple_type_ext,
-      '*',
+      ',',
       $._simple_type_ext
     )),
 
@@ -1275,7 +1277,7 @@ module.exports = grammar({
     match_case: $ => seq(
       field('pattern', $._pattern_ext),
       optional($.guard),
-      '->',
+      '=>',
       field('body', choice($._sequence_expression_ext, $.refutation_case))
     ),
 
@@ -1287,13 +1289,13 @@ module.exports = grammar({
     refutation_case: $ => '.',
 
     function_expression: $ => prec.right(PREC.match, seq(
-      'function',
+      'fun',
       optional($._attribute),
       $._match_cases
     )),
 
     fun_expression: $ => prec.right(PREC.match, seq(
-      'fun',
+      'funny',
       optional($._attribute),
       repeat1($._parameter),
       optional($._simple_typed),
@@ -1630,8 +1632,8 @@ module.exports = grammar({
     array_pattern: $ => prec.left(seq(
       '[|',
       optional(seq(
-        sep1(';', $._pattern_ext),
-        optional(';')
+        sep1(',', $._pattern_ext),
+        optional(',')
       )),
       '|]'
     )),
